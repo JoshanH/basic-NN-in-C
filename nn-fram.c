@@ -12,6 +12,7 @@ float train[][3] =
   {1, 0, 1},
   {1, 1, 0}
 };
+#define TRAIN_NUM (sizeof(train) / sizeof(train[0]))
 
 
 typedef struct 
@@ -62,7 +63,7 @@ float* matAt(Mat mat, size_t r, size_t c)
 }
 
 
-Mat matMultiply(Mat m1, Mat m2)
+Mat matMult(Mat m1, Mat m2)
 {
   assert(m1.cols == m2.rows);
   
@@ -89,12 +90,12 @@ Mat matMultiply(Mat m1, Mat m2)
 
 Mat matAdd(Mat m1, Mat m2)
 {
-  assert((m1.cols == m2.cols) && (m1.rows == m2.cols));
+  assert((m1.cols == m2.cols) && (m1.rows == m2.rows));
 
   float rows = m1.rows;
   float cols = m1.cols;
 
-  Mat res = buildMat(rows, rows);
+  Mat res = buildMat(rows, cols);
 
   for (size_t i=0; i < cols * rows; i++)
   {
@@ -102,6 +103,15 @@ Mat matAdd(Mat m1, Mat m2)
   }
 
   return res;
+}
+
+
+void sigmoidMat(Mat mat)
+{
+  for (size_t i=0; i < mat.rows * mat.cols; i++)
+  {
+    mat.els[i] = 1 / (1 + expf(-mat.els[i]));
+  }
 }
 
 
@@ -128,24 +138,57 @@ int main()
 {
   srand(time(0));
   
-  Mat in = buildMat(1, 2);
 
   // build weights matrix for 1st layer
   Mat w1 = buildMat(2, 2);
-  randomizeMat(w, 10.0f);
+  randomizeMat(w1, 10.0f);
   
   // build bias matrix for 1st layer
   Mat b1 = buildMat(1, 2);
-  randomizeMat(b, 5.0f);
+  randomizeMat(b1, 5.0f);
 
   // build weights matrix for 2nd layer
-  Mat w2 = buildMat(1, 2);
+  Mat w2 = buildMat(2, 1);
+  randomizeMat(w2, 10.0f);
 
   // build bias matrix for 2nd layer
   Mat b2 = buildMat(1, 1);
+  randomizeMat(b2, 5.0f);
 
-  printMat(w);
-  printf("\n");
-  printMat(b);
+
+  printf("\n1st Layer Weights: \n");
+  printMat(w1);
+  printf("\n1st Layer Bias: \n");
+  printMat(b1);
+
+  printf("\n2nd Layer Weights: \n");
+  printMat(w2);
+  printf("\n2nd Layer Bias \n");
+  printMat(b2);
+
+
+  printf("\n------------------------------------POC-TEST---\n");
+
+  // run a quick little test with the XOR test 
+  Mat in = buildMat(1, 2);
+  in.els[0] = 1.0f;
+  in.els[1] = 1.0f;
+
+  printf("\nInput: \n");
+  printMat(in);
+
+  Mat a1 = matAdd(matMult(in, w1), b1);
+  sigmoidMat(a1);
+  printf("\na1 success\n");
+  printMat(a1);
+
+  Mat a2 = matAdd(matMult(a1, w2), b2);
+  sigmoidMat(a2);
+  printf("a2 success\n");
+  printMat(a2);
+
+  printf("\nResult: \n");
+  printMat(a2);
+
   return 0;
 }
